@@ -1,11 +1,11 @@
 ---
 controller_templates:
-  - name: "AAP Migration - Get Inventories"
+  - name: "AAP Migration - Get Inventory"
     description: "{{ description }}"
     organization: "{{ orgs }}"
     project: "aap-migration"
     inventory: "Default Blank Localhost Only"
-    playbook: "export_playbooks/main_export_create_inventories.yml"
+    playbook: "export_playbooks/main_export_create_inventory.yml"
     scm_branch: "main"
     forks: 3
     limit: ""

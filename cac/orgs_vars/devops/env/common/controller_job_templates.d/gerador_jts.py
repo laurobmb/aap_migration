@@ -1,6 +1,7 @@
 import os
+import re
 
-# A sua lista de recursos
+# A sua lista de recursos (Idêntica ao que a role exige)
 recursos = [
     "settings", "credentials", "credential_types", "execution_environments",
     "groups", "hosts", "inventory", "inventory_sources", "job_templates",
@@ -16,32 +17,31 @@ with open(arquivo_base, "r") as f:
     conteudo_base = f.read()
 
 for recurso in recursos:
-    # 1. Corrige o plural do inventory para bater com a role
-    nome_seguro = "inventories" if recurso == "inventory" else recurso
-    
-    # 2. Cria um nome bonito (Title Case) para a interface do AAP
+    # Cria um nome bonito (Title Case) para a interface do AAP
     # Exemplo: "credential_types" vira "Credential Types"
-    nome_exibicao = nome_seguro.replace('_', ' ').title()
+    nome_exibicao = recurso.replace('_', ' ').title()
 
     # Define o nome do arquivo que será salvo na sua pasta do Git
-    nome_arquivo = f"jt_export_{nome_seguro}.yml"
+    nome_arquivo = f"jt_export_{recurso}.yml"
     
-    # 3. Substitui o Nome do Job Template
-    novo_conteudo = conteudo_base.replace(
-        'name: "AAP Migration - Get Templates"',
-        f'name: "AAP Migration - Get {nome_exibicao}"'
+    # 1. Substitui o Nome do Job Template de forma dinâmica
+    novo_conteudo = re.sub(
+        r'name: "AAP Migration - Get .*"',
+        f'name: "AAP Migration - Get {nome_exibicao}"',
+        conteudo_base
     )
     
-    # 4. Substitui o nome do Playbook que o Job Template vai executar
-    novo_conteudo = novo_conteudo.replace(
-        'playbook: "main_export_create_job_templates.yml"',
-        f'playbook: "export_playbooks/main_export_create_{nome_seguro}.yml"'
+    # 2. Substitui o nome do Playbook que o Job Template vai executar de forma dinâmica
+    novo_conteudo = re.sub(
+        r'playbook: ".*\.yml"',
+        f'playbook: "export_playbooks/main_export_create_{recurso}.yml"',
+        novo_conteudo
     )
     
     # Grava o novo arquivo YAML
     with open(nome_arquivo, "w") as f:
         f.write(novo_conteudo)
         
-    print(f"✅ Arquivo gerado: {nome_arquivo} -> Playbook vinculado: main_export_create_{nome_seguro}.yml")
+    print(f"✅ Arquivo gerado: {nome_arquivo} -> Playbook vinculado: export_playbooks/main_export_create_{recurso}.yml")
 
-print("\n🎉 Todos os 20 Job Templates de CaC foram gerados com sucesso!")
+print("\n🎉 Todos os 20 Job Templates de CaC foram gerados com sucesso e alinhados no singular!")
