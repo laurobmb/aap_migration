@@ -1,5 +1,5 @@
 ---
-- name: Controller file create dump
+- name: Controller file create dump job_templates
   hosts: localhost
   gather_facts: false
 
