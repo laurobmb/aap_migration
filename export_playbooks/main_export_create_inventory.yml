@@ -1,5 +1,5 @@
 ---
-- name: Controller file create dump inventories
+- name: Controller file create dump inventory
   hosts: localhost
   gather_facts: false
 
@@ -17,7 +17,7 @@
     backup_dir: "{{ repo_dir }}/orgs"
 
     input_tag:
-      - inventories
+      - inventory
 
   module_defaults:
     ansible.builtin.uri:
@@ -25,17 +25,20 @@
 
   pre_tasks:
     - name: DEBUG PROXY
+      tags: always
       ansible.builtin.debug:
         msg:
           - "HTTPS_PROXY: {{ lookup('env', 'HTTPS_PROXY') | regex_replace('//.*?:*?@', '//***:***@') }}"
           - "NO_PROXY: {{ lookup('env', 'NO_PROXY') | default('Nao definido'), true }}"
 
     - name: Limpar diretório temporário (Idempotência no container)
+      tags: always
       ansible.builtin.file:
         path: "{{ repo_dir }}"
         state: absent
 
     - name: Clonar o repositório e preparar a branch
+      tags: always
       ansible.builtin.shell: |
         git clone https://{{ github_token }}@{{ github_repo_url }} {{ repo_dir }}
         cd {{ repo_dir }}
@@ -43,16 +46,16 @@
       no_log: true
 
     - name: Garantir que a pasta de backup exista dentro do repo
+      tags: always
       ansible.builtin.file:
         path: "{{ backup_dir }}"
         state: directory
         mode: '0755'
 
     - name: Setup authentication
+      tags: always
       no_log: "{{ controller_configuration_filetree_create_secure_logging | default('false') }}"
-      when: controller_oauthtoken is not defined
-      tags:
-        - always
+      when: controller_oauthtoken is not defined or controller_oauthtoken == ''
       block:
         - name: Get the authentication
           ansible.builtin.uri:
@@ -64,7 +67,7 @@
             status_code: 201
           register: authtoken_res
 
-        - name: Set the
+        - name: Set the token
           ansible.builtin.set_fact:
             controller_oauthtoken: "{{ authtoken_res.json.token }}"
             controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
@@ -73,7 +76,8 @@
     - infra.controller_configuration.filetree_create
 
   post_tasks:
-    - name: Delete
+    - name: Delete Auth Token
+      tags: always
       ansible.builtin.uri:
         url: "https://{{ controller_hostname }}{{ controller_oauthtoken_url }}"
         user: "{{ controller_username }}"
@@ -82,8 +86,10 @@
         force_basic_auth: true
         status_code: 204
       when: controller_oauthtoken_url is defined
+      ignore_errors: true
 
     - name: Configurar identidade do Git, fazer Commit e Push
+      tags: always
       ansible.builtin.shell: |
         set -e
         cd {{ repo_dir }}
@@ -104,5 +110,7 @@
       changed_when: "'SUCESSO_PUSH' in git_result.stdout"
 
     - name: Resumo da Execução
+      tags: always
       ansible.builtin.debug:
         msg: "Processo concluído! Verifique a branch {{ github_branch }} no repositório."
+...

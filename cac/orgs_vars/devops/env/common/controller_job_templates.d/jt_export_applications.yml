@@ -35,7 +35,6 @@ controller_templates:
     ask_instance_groups_on_launch: false
     extra_vars:
       cluster: cluster
-    job_tags: "certificate_check"
     force_handlers: false
     skip_tags: ""
     start_at_task: ""
