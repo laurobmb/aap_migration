@@ -23,7 +23,7 @@ controller_templates:
     ask_skip_tags_on_launch: false
     ask_job_type_on_launch: false
     ask_verbosity_on_launch: false
-    ask_variables_on_launch: true
+    ask_variables_on_launch: false
     ask_inventory_on_launch: false
     ask_limit_on_launch: false
     ask_credential_on_launch: false
