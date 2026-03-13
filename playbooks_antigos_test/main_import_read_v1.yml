@@ -1,0 +1,100 @@
+---
+- name: GitOps - Apply Configuration as Code (Filetree Read & Dispatch)
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    # 1. Autenticação do AAP de Destino (Lida via Credencial do AAP)
+    controller_hostname: "{{ lookup('env', 'CONTROLLER_HOST') }}"
+    controller_username: "{{ lookup('env', 'CONTROLLER_USERNAME') | default(omit) }}"
+    controller_password: "{{ lookup('env', 'CONTROLLER_PASSWORD') | default(omit) }}"
+    controller_oauthtoken: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN') | default(null) }}"
+    controller_validate_certs: false
+
+    # 2. Configurações do Git (De onde vamos puxar os dados)
+    github_token: "{{ github_token }}"
+    github_repo_url: "github.com/laurobmb/aap_backup.git"
+    github_branch: "aap24-platform-baseline"
+
+    # 3. Diretório temporário para baixar o repositório
+    repo_dir: "/tmp/filetree_input"
+
+    # 🚨 VARIÁVEL CHAVE: Informa à role filetree_read onde está a raiz das pastas (Default, devops, etc.)
+    dir_orgs_vars: "{{ repo_dir }}"
+
+    # 🚨 LISTA DE ORGANIZAÇÕES: Necessária para a role filetree_read mapear as pastas corretas
+    orgs:
+      - name: 'Default'
+      - name: 'devops'
+      - name: 'ORGANIZATIONLESS'
+
+  module_defaults:
+    ansible.builtin.uri:
+      validate_certs: "{{ controller_validate_certs }}"
+
+  pre_tasks:
+    - name: DEBUG PROXY
+      ansible.builtin.debug:
+        msg:
+          - "HTTPS_PROXY: {{ lookup('env', 'HTTPS_PROXY') | regex_replace('//.*?:*?@', '//***:***@') }}"
+          - "NO_PROXY: {{ lookup('env', 'NO_PROXY') | default('Nao definido', true) }}"
+
+    - name: Limpar diretório temporário (Idempotência no container)
+      ansible.builtin.file:
+        path: "{{ repo_dir }}"
+        state: absent
+
+    - name: Clonar o repositório do GitHub (Apenas Leitura)
+      ansible.builtin.shell: |
+        # Faz o clone já baixando diretamente a branch correta
+        git clone https://{{ github_token }}@{{ github_repo_url }} -b {{ github_branch }} {{ repo_dir }}
+      # no_log: true # Mantenha comentado para testes, ative em prod para esconder o token
+
+    - name: Setup authentication (Gerar Token Temporário)
+      no_log: "{{ controller_configuration_filetree_create_secure_logging | default('false') }}"
+      when: controller_oauthtoken is not defined
+      tags:
+        - always
+      block:
+        - name: Get the authentication
+          ansible.builtin.uri:
+            url: "https://{{ controller_hostname }}/api/v2/tokens/"
+            user: "{{ controller_username }}"
+            password: "{{ controller_password }}"
+            method: POST
+            force_basic_auth: true
+            status_code: 201
+          register: authtoken_res
+
+        - name: Set the Token Fact
+          ansible.builtin.set_fact:
+            controller_oauthtoken: "{{ authtoken_res.json.token }}"
+            controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
+
+  roles:
+    # Passo 1: Lê os YAMLs do /tmp/filetree_input e carrega na memória do Ansible
+    - role: infra.controller_configuration.filetree_read
+
+    # Passo 2: Pega o que está na memória e cria/atualiza os recursos no AAP via API
+    - role: infra.controller_configuration.dispatch
+
+  post_tasks:
+    - name: Delete Authentication Token
+      ansible.builtin.uri:
+        url: "https://{{ controller_hostname }}{{ controller_oauthtoken_url }}"
+        user: "{{ controller_username }}"
+        password: "{{ controller_password }}"
+        method: DELETE
+        force_basic_auth: true
+        status_code: 204
+      when: controller_oauthtoken_url is defined
+
+    - name: Limpar diretório temporário final
+      ansible.builtin.file:
+        path: "{{ repo_dir }}"
+        state: absent
+
+    - name: Resumo da Execução
+      ansible.builtin.debug:
+        msg: "✅ Restore concluído! Toda a infraestrutura da branch {{ github_branch }} foi aplicada no servidor {{ controller_hostname }}."
+...

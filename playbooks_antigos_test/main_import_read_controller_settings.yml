@@ -1,0 +1,134 @@
+---
+- name: Local Troubleshoot - Sanitizar e Aplicar controller_settings.yml
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars.yml
+
+  vars:
+    # Autenticação do AAP (Via variáveis de ambiente do ansible-navigator)
+    controller_hostname: "{{ lookup('env', 'CONTROLLER_HOST') }}"
+    controller_username: "{{ lookup('env', 'CONTROLLER_USERNAME') | default(omit) }}"
+    controller_password: "{{ lookup('env', 'CONTROLLER_PASSWORD') | default(omit) }}"
+    controller_oauthtoken: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN') | default(null) }}"
+    controller_validate_certs: false
+
+    # Caminho relativo para o arquivo na sua máquina local
+    settings_file: "variaveis/controller_settings.yml"
+
+  module_defaults:
+    ansible.builtin.uri:
+      validate_certs: "{{ controller_validate_certs }}"
+
+  pre_tasks:
+    - name: Setup authentication (Gerar Token Temporário)
+      #no_log: true
+      when: controller_oauthtoken is not defined or controller_oauthtoken == ''
+      tags:
+        - always
+      block:
+        - name: Get the authentication
+          ansible.builtin.uri:
+            url: https://{{ controller_hostname }}/api/v2/tokens/
+            user: "{{ controller_username }}"
+            password: "{{ controller_password }}"
+            method: POST
+            force_basic_auth: true
+            status_code: 201
+          register: authtoken_res
+
+        - name: Set the Token Fact
+          ansible.builtin.set_fact:
+            controller_oauthtoken: "{{ authtoken_res.json.token }}"
+            controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
+
+  tasks:
+    - name: Verificar se o arquivo existe
+      ansible.builtin.stat:
+        path: "{{ settings_file }}"
+      register: file_stat
+
+    - name: Bloco de Sanitização e Aplicação do YAML
+      when: file_stat.stat.exists
+      block:
+        - name: Ler o conteúdo original do arquivo
+          ansible.builtin.slurp:
+            src: "{{ settings_file }}"
+          register: slurp_settings
+
+        - name: Corrigir sintaxe quebrada e converter para Dicionário
+          ansible.builtin.set_fact:
+            parsed_yaml: >-
+              {{
+                (slurp_settings.content | b64decode)
+                | regex_replace('!unsafe ', '')
+                | regex_replace('AUTOMATION_ANALYTICS_LAST_ENTRIES:.*', 'AUTOMATION_ANALYTICS_LAST_ENTRIES: "{}"')
+                | from_yaml
+              }}
+
+        - name: Sanitizar as configurações globais (Remover itens do Servidor e Senhas)
+          ansible.builtin.set_fact:
+            sanitized_settings: >-
+              {{
+                parsed_yaml.controller_settings[0].settings
+                | dict2items
+                | rejectattr('key', 'in', [
+                    'LICENSE', 
+                    'INSTALL_UUID', 
+                    'AUTOMATION_ANALYTICS_LAST_ENTRIES', 
+                    'AUTOMATION_ANALYTICS_LAST_GATHER',
+                    'CLEANUP_HOST_METRICS_LAST_TS',
+                    'HOST_METRIC_SUMMARY_TASK_LAST_TS',
+                    'INSIGHTS_TRACKING_STATE',
+                    'PENDO_TRACKING_STATE',
+                    'REDHAT_USERNAME',
+                    'TOWER_URL_BASE'
+                  ])
+                | rejectattr('value', 'equalto', '$encrypted$')
+                | items2dict
+              }}
+
+        - name: Reconstruir a estrutura original do controller_settings
+          ansible.builtin.set_fact:
+            final_yaml:
+              controller_settings:
+                - settings: "{{ sanitized_settings }}"
+
+        - name: Sobrescrever o arquivo com a versão limpa
+          ansible.builtin.copy:
+            content: "---\n{{ final_yaml | to_nice_yaml(indent=2, width=1337) }}"
+            dest: "{{ settings_file }}"
+            mode: '0644'
+
+        - name: Resumo do Parse
+          ansible.builtin.debug:
+            msg: "✅ Sanitização concluída! O arquivo {{ settings_file }} foi limpo."
+
+        # =========================================================================
+        # CARREGAR E APLICAR NO AAP
+        # =========================================================================
+        - name: Carregar a variável na memória para o Dispatch
+          ansible.builtin.set_fact:
+            controller_settings: "{{ final_yaml.controller_settings }}"
+
+        - name: Acionar o Dispatch para injetar as Settings limpas no AAP
+          ansible.builtin.include_role:
+            name: infra.controller_configuration.dispatch
+
+    - name: Falha caso o arquivo não exista
+      when: not file_stat.stat.exists
+      ansible.builtin.fail:
+        msg: "❌ O arquivo {{ settings_file }} não foi encontrado. Execute este playbook na raiz do seu projeto."
+
+  post_tasks:
+    - name: Delete Authentication Token
+      ansible.builtin.uri:
+        url: "{{ controller_hostname }}{{ controller_oauthtoken_url }}"
+        user: "{{ controller_username }}"
+        password: "{{ controller_password }}"
+        method: DELETE
+        force_basic_auth: true
+        status_code: 204
+      when: controller_oauthtoken_url is defined
+      ignore_errors: true
+...

@@ -1,0 +1,27 @@
+---
+- name: Backup do AAP usando Credencial Nativa
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Extrair TODAS as configurações do AAP atual
+      ansible.controller.export:
+        all: true
+      register: aap_export_data
+
+    - name: Garantir que o diretório de backup exista
+      ansible.builtin.file:
+        path: "/tmp/backup_aap"
+        state: directory
+        mode: '0755'
+
+    - name: Salvar o backup consolidado em formato YAML
+      ansible.builtin.copy:
+        content: "{{ aap_export_data.assets | to_nice_yaml }}"
+        dest: "/tmp/backup_aap/exportacao_completa_aap.yml"
+
+    - name: Confirmar o sucesso
+      ansible.builtin.debug:
+        msg: "Backup realizado com sucesso e salvo em /tmp/backup_aap/exportacao_completa_aap.yml"
+

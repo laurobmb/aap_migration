@@ -1,0 +1,25 @@
+---
+- name: Controller file create dump
+  hosts: localhost
+  gather_facts: false
+  vars:
+    controller_validate_certs: false
+    controller_oauthtoken: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN') }}"
+
+  pre_tasks:
+    - name: DEBUG AUTHENTICATION
+      ansible.builtin.debug:
+        msg:
+          - "CONTROLLER_HOST: {{ lookup('env', 'CONTROLLER_HOST') | default('Nao definido'), true }}"
+          - "CONTROLLER_USERNAME: {{ lookup('env', 'CONTROLLER_USERNAME') | default('Nao definido'), true }}"
+          - "CONTROLLER_PASSWORD: {{ 'Definida' if lookup('env','CONTROLLER_PASSWORD') != '' else 'Nao definido'}}"
+          - "CONTROLLER_OAUTH_TOKEN: {{ 'Definida' if lookup('env','CONTROLLER_OAUTH_TOKEN') != '' else 'Nao definido'}}"
+
+    - name: DEBUG PROXY
+      ansible.builtin.debug:
+        msg:
+          - "HTTPS_PROXY: {{ lookup('env', 'HTTPS_PROXY') | regex_replace('//.*?:*?@', '//***:***@') }}"
+          - "NO_PROXY: {{ lookup('env', 'NO_PROXY') | default('Nao definido'), true }}"
+
+  roles:
+    - infra.controller_configuration.filetree_create
