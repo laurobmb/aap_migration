@@ -1,0 +1,10 @@
+---
+controller_credentials:
+  - name: "GitHub Token v2"
+    description: "{{ description }}"
+    credential_type: "Custom GitHub Token Injector"
+    organization: "{{ orgs }}"
+    inputs:
+      github_token_secret: "{{ github_token_30 }}"
+
+...

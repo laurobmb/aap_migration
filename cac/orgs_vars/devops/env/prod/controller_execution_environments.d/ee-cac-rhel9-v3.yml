@@ -1,0 +1,9 @@
+---
+controller_execution_environments:
+  - name: ee-cac-rhel9-v3
+    description: "{{ description }}"
+    organization: "{{ orgs }}"
+    image: quay.io/lagomes/ee-cac-rhel9:v3
+    pull: missing
+
+

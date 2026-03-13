@@ -22,7 +22,7 @@
     - name: Clonar o repositório do GitHub
       ansible.builtin.shell: |
         git clone https://{{ github_token }}@{{ github_repo_url }} -b {{ github_branch }} {{ repo_dir }}
-      # no_log: true
+      no_log: true
 
   tasks:
     - name: Verificar se o arquivo current_settings.yaml existe

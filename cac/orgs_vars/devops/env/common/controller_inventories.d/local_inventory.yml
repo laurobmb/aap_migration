@@ -1,0 +1,4 @@
+controller_inventories:
+  - name: Default Blank Localhost Only
+    organization: "{{ orgs }}"
+    description: "{{ description }}"

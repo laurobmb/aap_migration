@@ -1,0 +1,108 @@
+---
+- name: Controller file create dump inventories
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    controller_hostname: "{{ lookup('env', 'CONTROLLER_HOST') }}"
+    controller_username: "{{ lookup('env', 'CONTROLLER_USERNAME')|default(omit) }}"
+    controller_password: "{{ lookup('env', 'CONTROLLER_PASSWORD')|default(omit) }}"
+    controller_oauthtoken: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN')|default(null) }}"
+    controller_validate_certs: false
+
+    github_token: "{{ github_token }}"
+    github_repo_url: "github.com/laurobmb/aap_migration.git"
+    github_branch: "aap24-platform-baseline"
+    repo_dir: "/tmp/filetree_output"
+    backup_dir: "{{ repo_dir }}/orgs"
+
+    input_tag:
+      - inventories
+
+  module_defaults:
+    ansible.builtin.uri:
+      validate_certs: "{{ controller_validate_certs }}"
+
+  pre_tasks:
+    - name: DEBUG PROXY
+      ansible.builtin.debug:
+        msg:
+          - "HTTPS_PROXY: {{ lookup('env', 'HTTPS_PROXY') | regex_replace('//.*?:*?@', '//***:***@') }}"
+          - "NO_PROXY: {{ lookup('env', 'NO_PROXY') | default('Nao definido'), true }}"
+
+    - name: Limpar diretório temporário (Idempotência no container)
+      ansible.builtin.file:
+        path: "{{ repo_dir }}"
+        state: absent
+
+    - name: Clonar o repositório e preparar a branch
+      ansible.builtin.shell: |
+        git clone https://{{ github_token }}@{{ github_repo_url }} {{ repo_dir }}
+        cd {{ repo_dir }}
+        git checkout {{ github_branch }} 2>/dev/null || git checkout -b {{ github_branch }}
+      no_log: true
+
+    - name: Garantir que a pasta de backup exista dentro do repo
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Setup authentication
+      no_log: "{{ controller_configuration_filetree_create_secure_logging | default('false') }}"
+      when: controller_oauthtoken is not defined
+      tags:
+        - always
+      block:
+        - name: Get the authentication
+          ansible.builtin.uri:
+            url: "https://{{ controller_hostname }}/api/v2/tokens/"
+            user: "{{ controller_username }}"
+            password: "{{ controller_password }}"
+            method: POST
+            force_basic_auth: true
+            status_code: 201
+          register: authtoken_res
+
+        - name: Set the
+          ansible.builtin.set_fact:
+            controller_oauthtoken: "{{ authtoken_res.json.token }}"
+            controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
+
+  roles:
+    - infra.controller_configuration.filetree_create
+
+  post_tasks:
+    - name: Delete
+      ansible.builtin.uri:
+        url: "https://{{ controller_hostname }}{{ controller_oauthtoken_url }}"
+        user: "{{ controller_username }}"
+        password: "{{ controller_password }}"
+        method: DELETE
+        force_basic_auth: true
+        status_code: 204
+      when: controller_oauthtoken_url is defined
+
+    - name: Configurar identidade do Git, fazer Commit e Push
+      ansible.builtin.shell: |
+        set -e
+        cd {{ repo_dir }}
+
+        git config user.name "AAP Automation (CaC)"
+        git config user.email "cac-automation@rhbr-lab.com"
+        git add .
+
+        if ! git diff-index --quiet HEAD; then
+          git commit -m "Backup baseline do AAP 2.4 - $(date +'%Y-%m-%d %H:%M:%S')"
+          #git pull --rebase origin {{ github_branch }}
+          git push origin {{ github_branch }}
+          echo "STATUS: SUCESSO_PUSH"
+        else
+          echo "STATUS: SEM_MUDANCAS"
+        fi
+      register: git_result
+      changed_when: "'SUCESSO_PUSH' in git_result.stdout"
+
+    - name: Resumo da Execução
+      ansible.builtin.debug:
+        msg: "Processo concluído! Verifique a branch {{ github_branch }} no repositório."

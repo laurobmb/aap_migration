@@ -48,7 +48,7 @@
       ansible.builtin.shell: |
         # Faz o clone já baixando diretamente a branch correta
         git clone https://{{ github_token }}@{{ github_repo_url }} -b {{ github_branch }} {{ repo_dir }}
-      # no_log: true # Mantenha comentado para testes, ative em prod para esconder o token
+      no_log: true # Mantenha comentado para testes, ative em prod para esconder o token
 
     - name: Setup authentication (Gerar Token Temporário)
       no_log: "{{ controller_configuration_filetree_create_secure_logging | default('false') }}"

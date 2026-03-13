@@ -1,0 +1,46 @@
+---
+controller_workflows:
+  - name: Automation - AAP Migration
+    description: "{{ description }}"
+    organization: "{{ orgs }}"
+    extra_vars:
+      teste_var: 'xxx'
+    inventory: 'Default Blank Localhost Only'
+    limit: ''
+    scm_branch: ''
+    webhook_service: ''
+    webhook_credential: ''
+    survey_enabled: false
+    allow_simultaneous: false
+    ask_limit_on_launch: True
+    ask_inventory_on_launch: True
+    ask_tags_on_launch: True
+    ask_credential_on_launch: true
+    schedules: []
+    workflow_nodes:
+
+      - identifier: aap-migration
+        unified_job_template:
+          organization:
+            name: "{{ orgs }}"
+          name: aap-migration
+          type: project
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Templates
+
+      - identifier: AAP Migration - Get Templates
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Templates
+          organization:
+            name: "{{ orgs }}"
+          type: job_template

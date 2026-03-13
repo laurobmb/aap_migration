@@ -1,3 +1,4 @@
+
 {
   "evaluated_to": false,
   "assertion": "tag_item in valid_tags",
@@ -8,3 +9,26 @@
   "ansible_loop_var": "tag_item",
   "_ansible_item_label": "controller_job_templates"
 }
+
+
+
+off - settings
+ok - credentials
+off - credential_types
+off - execution_environments
+off - groups
+off - hosts
+off - inventory
+off - inventory_sources
+ok - job_templates
+off - notification_templates
+off - organizations
+off - projects
+off - roles
+off - teams
+off - users
+off - workflow_job_templates
+off - instance_groups
+off - applications
+off - labels
+off - schedules

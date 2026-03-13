@@ -32,7 +32,7 @@
     - name: Clonar o repositório do GitHub (Apenas Leitura)
       ansible.builtin.shell: |
         git clone https://{{ github_token }}@{{ github_repo_url }} -b {{ github_branch }} {{ repo_dir }}
-      # no_log: true
+      no_log: true
 
     - name: Setup authentication (Gerar Token Temporário)
       no_log: "{{ controller_configuration_filetree_create_secure_logging | default('false') }}"
@@ -113,7 +113,7 @@
       vars:
         file_content: "{{ lookup('file', item.path) | regex_replace('!unsafe ', '') | from_yaml | default({}, true) }}"
       loop: "{{ yaml_files.files }}"
-      # no_log: true
+      no_log: true
 
     # =========================================================================
     # A MÁGICA DE IMPORTAÇÃO

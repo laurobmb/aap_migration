@@ -1,0 +1,9 @@
+---
+controller_hosts:
+  - name: localhost
+    inventory: Default Blank Localhost Only
+    description: "{{ description }}"
+    enabled: true
+    variables:
+      ansible_connection: local
+      ansible_host: 127.0.0.1

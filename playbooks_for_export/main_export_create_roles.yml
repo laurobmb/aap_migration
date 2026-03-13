@@ -1,5 +1,5 @@
 ---
-- name: Controller file create dump job_templates
+- name: Controller file create dump roles
   hosts: localhost
   gather_facts: false
 
@@ -17,7 +17,7 @@
     backup_dir: "{{ repo_dir }}/orgs"
 
     input_tag:
-      - job_templates
+      - roles
 
   module_defaults:
     ansible.builtin.uri:
@@ -40,7 +40,7 @@
         git clone https://{{ github_token }}@{{ github_repo_url }} {{ repo_dir }}
         cd {{ repo_dir }}
         git checkout {{ github_branch }} 2>/dev/null || git checkout -b {{ github_branch }}
-      # no_log: true
+      no_log: true
 
     - name: Garantir que a pasta de backup exista dentro do repo
       ansible.builtin.file:

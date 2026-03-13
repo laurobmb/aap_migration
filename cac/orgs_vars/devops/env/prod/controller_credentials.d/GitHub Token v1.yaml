@@ -1,0 +1,8 @@
+---
+controller_credentials:
+  - name: "GitHub Token v1"
+    description: "{{ description }}"
+    credential_type: "GitHub Personal Access Token"
+    organization: "{{ orgs }}"
+    inputs:
+      token: "{{ github_token_30 }}"
