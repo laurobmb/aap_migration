@@ -22,3 +22,4 @@ ansible.cfg
 playbooks_antigos_test/variaveis/controller_settings.yml
 
 playbooks_antigos_test/.pass
+oldv2/
