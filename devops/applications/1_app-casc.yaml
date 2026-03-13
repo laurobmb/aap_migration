@@ -1,0 +1,11 @@
+---
+controller_applications:
+  - name: "app-casc"
+    description: "Projeto de automacao CaC"
+    organization: "devops"
+    authorization_grant_type: "password"
+    redirect_uris: ""
+    skip_authorization: "False"
+    client_id: "r4CGP91UvsM3XqiEwACYCrogePGvLpPiDi5u5ze7"
+    client_type: "confidential"
+...

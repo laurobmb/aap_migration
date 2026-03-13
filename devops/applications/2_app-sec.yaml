@@ -1,0 +1,11 @@
+---
+controller_applications:
+  - name: "app-sec"
+    description: "Projeto de automacao CaC"
+    organization: "devops"
+    authorization_grant_type: "authorization-code"
+    redirect_uris: "http://controller01.localnet.local/api/v2/"
+    skip_authorization: "False"
+    client_id: "cAYThh5ZZ520RpM4Gtas086PxUj7vADVD2fmvpdX"
+    client_type: "public"
+...
