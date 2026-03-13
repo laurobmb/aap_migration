@@ -71,9 +71,9 @@
           ansible.builtin.set_fact:
             controller_oauthtoken: "{{ authtoken_res.json.token }}"
             controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
-
   roles:
-    - infra.controller_configuration.filetree_create
+    - role: infra.controller_configuration.filetree_create
+      tags: always
 
   post_tasks:
     - name: Delete Auth Token
