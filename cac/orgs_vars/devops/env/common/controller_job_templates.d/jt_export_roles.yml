@@ -5,7 +5,7 @@ controller_templates:
     organization: "{{ orgs }}"
     project: "aap-migration"
     inventory: "Default Blank Localhost Only"
-    playbook: "main_export_create_roles.yml"
+    playbook: "export_playbooks/main_export_create_roles.yml"
     scm_branch: "main"
     forks: 3
     limit: ""

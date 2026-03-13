@@ -35,7 +35,7 @@ for recurso in recursos:
     # 4. Substitui o nome do Playbook que o Job Template vai executar
     novo_conteudo = novo_conteudo.replace(
         'playbook: "main_export_create_job_templates.yml"',
-        f'playbook: "main_export_create_{nome_seguro}.yml"'
+        f'playbook: "export_playbooks/main_export_create_{nome_seguro}.yml"'
     )
     
     # Grava o novo arquivo YAML
