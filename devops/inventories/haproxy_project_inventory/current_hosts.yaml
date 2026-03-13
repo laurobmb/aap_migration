@@ -1,0 +1,23 @@
+---
+controller_hosts:
+  - name: "haproxy.localnet.local"
+    description: "Projeto de automacao CaC"
+    inventory: "haproxy_project_inventory"
+    variables:
+      ansible_host: 192.168.184.14
+  - name: "web1.localnet.local"
+    description: "Projeto de automacao CaC"
+    inventory: "haproxy_project_inventory"
+    variables:
+      ansible_host: 192.168.184.12
+  - name: "web2.localnet.local"
+    description: "Projeto de automacao CaC"
+    inventory: "haproxy_project_inventory"
+    variables:
+      ansible_host: 192.168.184.13
+  - name: "web3.localnet.local"
+    description: "Projeto de automacao CaC"
+    inventory: "haproxy_project_inventory"
+    variables:
+      ansible_host: 192.168.184.15
+...

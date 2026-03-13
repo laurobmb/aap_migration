@@ -1,0 +1,19 @@
+---
+controller_groups:
+  - name: "haproxys"
+    description: "Projeto de automacao CaC"
+    inventory: "haproxy_project_inventory"
+    variables:
+      myvars: example1
+    hosts:
+      - haproxy.localnet.local
+  - name: "web_servers"
+    description: "Projeto de automacao CaC"
+    inventory: "haproxy_project_inventory"
+    variables:
+      myvars: example1
+    hosts:
+      - web1.localnet.local
+      - web2.localnet.local
+      - web3.localnet.local
+...

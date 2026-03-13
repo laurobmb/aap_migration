@@ -1,0 +1,9 @@
+---
+controller_hosts:
+  - name: "localhost"
+    description: "Projeto de automacao CaC"
+    inventory: "Default Blank Localhost Only"
+    variables:
+      ansible_connection: local
+      ansible_host: 127.0.0.1
+...

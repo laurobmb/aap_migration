@@ -1,0 +1,8 @@
+---
+controller_inventories:
+  - name: "haproxy_project_inventory"
+    description: "Projeto de automacao CaC"
+    organization: "devops"
+    host_filter: ""
+    prevent_instance_group_fallback: False
+...
