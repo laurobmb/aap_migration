@@ -17,7 +17,7 @@
     backup_dir: "{{ repo_dir }}/orgs"
 
     input_tag:
-      - controller_job_templates
+      - job_templates
 
   module_defaults:
     ansible.builtin.uri:
