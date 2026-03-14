@@ -40,11 +40,11 @@
       tags: always
       ansible.builtin.shell: |
         git clone https://{{ github_token }}@{{ github_repo_url }} -b {{ github_branch }} {{ repo_dir }}
-      #no_log: true
+      ## no_log: true
 
     - name: Setup authentication
       tags: always
-      #no_log: true
+      ## no_log: true
       when: controller_oauthtoken is not defined or controller_oauthtoken == ''
       block:
         - name: Get the authentication
@@ -99,7 +99,7 @@
           | rejectattr('path', 'search', 'Ansible Galaxy') 
           | list 
         }}
-      #no_log: true
+      ## no_log: true
 
     - name: Acionar o Dispatch para injetar apenas este recurso
       ansible.builtin.include_role:
