@@ -7,6 +7,7 @@
 
   vars:
     controller_configuration_projects_async_retries: 60
+    aap_configuration_async_retries: 160
     controller_configuration_projects_async_delay: 2
     aap_username: "{{ vault_aap_username | default(lookup('env', 'CONTROLLER_USERNAME')) }}"
     aap_password: "{{ vault_aap_password | default(lookup('env', 'CONTROLLER_PASSWORD')) }}"
@@ -18,6 +19,9 @@
     env: prod
     description: Projeto de automacao CaC
     controller_configuration_credentials_secure_logging: true
+
+    input_tag:
+      - workflow_job_templates
 
   pre_tasks:
     - name: "Setup authentication (block)"

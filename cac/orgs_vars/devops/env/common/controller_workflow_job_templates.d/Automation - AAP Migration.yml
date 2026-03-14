@@ -30,9 +30,48 @@ controller_workflows:
           always_nodes: []
           credentials: []
           success_nodes:
-            - identifier: AAP Migration - Get Templates
+            - identifier: AAP Migration - Get Organizations
 
-      - identifier: AAP Migration - Get Templates
+      - identifier: AAP Migration - Get Organizations
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Settings
+            - identifier: AAP Migration - Get Credentials
+            - identifier: AAP Migration - Get Credential Types
+            - identifier: AAP Migration - Get Execution Environments
+            - identifier: AAP Migration - Get Groups
+            - identifier: AAP Migration - Get Hosts
+            - identifier: AAP Migration - Get Inventory
+            - identifier: AAP Migration - Get Inventory Sources
+            - identifier: AAP Migration - Get Job Templates
+            - identifier: AAP Migration - Get Notification Templates
+        unified_job_template:
+          name: AAP Migration - Get Organizations
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Settings
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Projects
+        unified_job_template:
+          name: AAP Migration - Get Settings
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Projects
         all_parents_must_converge: false
         related:
           failure_nodes: []
@@ -40,7 +79,255 @@ controller_workflows:
           credentials: []
           success_nodes: []
         unified_job_template:
-          name: AAP Migration - Get Templates
+          name: AAP Migration - Get Projects
           organization:
             name: "{{ orgs }}"
           type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Credentials
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Roles
+        unified_job_template:
+          name: AAP Migration - Get Credentials
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Roles
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Roles
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Credential Types
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Teams
+        unified_job_template:
+          name: AAP Migration - Get Credential Types
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Teams
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Teams
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Execution Environments
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Users
+        unified_job_template:
+          name: AAP Migration - Get Execution Environments
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Users
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Users
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Groups
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Workflow Job Templates
+        unified_job_template:
+          name: AAP Migration - Get Groups
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Workflow Job Templates
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Workflow Job Templates
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Hosts
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Instance Groups
+        unified_job_template:
+          name: AAP Migration - Get Hosts
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Instance Groups
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Instance Groups
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Inventory
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Applications
+        unified_job_template:
+          name: AAP Migration - Get Inventory
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Applications
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Applications
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Inventory Sources
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Labels
+        unified_job_template:
+          name: AAP Migration - Get Inventory Sources
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Labels
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Labels
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Job Templates
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Get Schedules
+        unified_job_template:
+          name: AAP Migration - Get Job Templates
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Schedules
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Schedules
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Get Notification Templates
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Get Notification Templates
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+...
