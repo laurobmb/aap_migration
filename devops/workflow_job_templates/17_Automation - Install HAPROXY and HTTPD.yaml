@@ -1,0 +1,49 @@
+---
+controller_workflows:
+  - name: "Automation - Install HAPROXY and HTTPD"
+    description: "Projeto de automacao CaC"
+    organization: "devops"
+    state: "present"
+    simplified_workflow_nodes:
+      - identifier: "Haproxy - haproxy-http"
+        workflow_job_template: "Automation - Install HAPROXY and HTTPD"
+        unified_job_template: "Haproxy - haproxy-http"
+        organization: "devops"
+        all_parents_must_converge: "False"
+        success_nodes:
+          - Haproxy - main-haproxy
+          - Haproxy - Generate Certificate
+      - identifier: "Haproxy - main-haproxy"
+        workflow_job_template: "Automation - Install HAPROXY and HTTPD"
+        unified_job_template: "Haproxy - main-haproxy"
+        organization: "devops"
+        all_parents_must_converge: "False"
+        success_nodes:
+          - Haproxy - Check Certificate
+      - identifier: "Haproxy - Generate Certificate"
+        workflow_job_template: "Automation - Install HAPROXY and HTTPD"
+        unified_job_template: "Haproxy - Generate Certificate"
+        organization: "devops"
+        all_parents_must_converge: "False"
+        success_nodes:
+          - Haproxy - Check Certificate
+      - identifier: "Haproxy - Check Certificate"
+        workflow_job_template: "Automation - Install HAPROXY and HTTPD"
+        unified_job_template: "Haproxy - Check Certificate"
+        organization: "devops"
+        all_parents_must_converge: "False"
+        success_nodes:
+          - Haproxy - main-http
+      - identifier: "Haproxy - main-http"
+        workflow_job_template: "Automation - Install HAPROXY and HTTPD"
+        unified_job_template: "Haproxy - main-http"
+        organization: "devops"
+        all_parents_must_converge: "False"
+    ask_variables_on_launch: "False"
+    allow_simultaneous: "False"
+    scm_branch: ""
+    webhook_service: ""
+    extra_vars:
+      teste_var: xxx
+    survey_enabled: False
+...
