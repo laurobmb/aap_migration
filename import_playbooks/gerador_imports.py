@@ -9,6 +9,7 @@ recursos_import = [
     ("execution_environments", "controller_execution_environments"),
     ("credential_types", "controller_credential_types"),
     ("credentials", "controller_credentials"),
+    ("notification_templates", "controller_notification_templates"),
     ("projects", "controller_projects"),
     ("inventories", "controller_inventories"),
     ("inventory_sources", "controller_inventory_sources"),
