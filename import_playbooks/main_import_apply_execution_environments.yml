@@ -1,0 +1,126 @@
+---
+- name: GitOps Import - execution_environments
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    controller_hostname: "{{ lookup('env', 'CONTROLLER_HOST') }}"
+    controller_username: "{{ lookup('env', 'CONTROLLER_USERNAME') | default(omit) }}"
+    controller_password: "{{ lookup('env', 'CONTROLLER_PASSWORD') | default(omit) }}"
+    controller_oauthtoken: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN') | default(null) }}"
+    controller_validate_certs: false
+
+    github_token: "{{ github_token }}"
+    github_repo_url: "github.com/laurobmb/aap_backup.git"
+    github_branch: "aap24-platform-baseline"
+    repo_dir: "/tmp/filetree_input"
+    
+    # 🚨 MÁGICA DO FILTRO: Recebe o nome da Org ou 'ALL' (Padrão)
+    target_org: "{{ target_org | default('ALL') }}"
+    
+    # Define os caminhos de busca baseado no filtro
+    search_paths: >-
+      {{
+        [repo_dir] if target_org == 'ALL' 
+        else [repo_dir + '/' + target_org, repo_dir + '/ORGANIZATIONLESS']
+      }}
+
+  module_defaults:
+    ansible.builtin.uri:
+      validate_certs: "{{ controller_validate_certs }}"
+
+  pre_tasks:
+    - name: Limpar diretório temporário
+      tags: always
+      ansible.builtin.file:
+        path: "{{ repo_dir }}"
+        state: absent
+
+    - name: Clonar o repositório do GitHub (Apenas Leitura)
+      tags: always
+      ansible.builtin.shell: |
+        git clone https://{{ github_token }}@{{ github_repo_url }} -b {{ github_branch }} {{ repo_dir }}
+      no_log: true
+
+    - name: Setup authentication
+      tags: always
+      no_log: true
+      when: controller_oauthtoken is not defined or controller_oauthtoken == ''
+      block:
+        - name: Get the authentication
+          ansible.builtin.uri:
+            url: "{{ controller_hostname }}/api/v2/tokens/"
+            user: "{{ controller_username }}"
+            password: "{{ controller_password }}"
+            method: POST
+            force_basic_auth: true
+            status_code: 201
+            body_format: json
+            body:
+              description: "CaC Import - execution_environments"
+              scope: "write"
+          register: authtoken_res
+
+        - name: Set the Token Fact
+          ansible.builtin.set_fact:
+            controller_oauthtoken: "{{ authtoken_res.json.token }}"
+            controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
+
+  tasks:
+    - name: Encontrar arquivos YAML apenas nos caminhos permitidos (Ignora Settings)
+      ansible.builtin.find:
+        paths: "{{ search_paths }}"
+        patterns: "*.yaml,*.yml"
+        excludes: "current_settings.yaml"
+        recurse: true
+      register: yaml_files
+
+    - name: Inicializar a lista vazia para o Dispatch
+      ansible.builtin.set_fact:
+        controller_execution_environments: []
+
+    - name: Carregar e agregar dados do arquivo para a memória
+      ansible.builtin.set_fact:
+        controller_execution_environments: "{{ controller_execution_environments + (file_content.controller_execution_environments | default([], true)) }}"
+      vars:
+        # A vacina contra !unsafe e ORGANIZATIONLESS se mantém
+        file_content: >-
+          {{ 
+            lookup('file', item.path) 
+            | regex_replace('!unsafe ', '') 
+            | regex_replace('(?m)^[ \t]*organization:\s*ORGANIZATIONLESS[ \t]*\r?\n?', '')
+            | from_yaml 
+            | default({}, true) 
+          }}
+      loop: >-
+        {{ 
+          yaml_files.files 
+          | rejectattr('path', 'search', 'Default Execution Environment Registry Credential') 
+          | rejectattr('path', 'search', 'Ansible Galaxy') 
+          | list 
+        }}
+      no_log: true
+
+    - name: Acionar o Dispatch para injetar apenas este recurso
+      ansible.builtin.include_role:
+        name: infra.controller_configuration.dispatch
+
+  post_tasks:
+    - name: Delete Authentication Token
+      tags: always
+      ansible.builtin.uri:
+        url: "{{ controller_hostname }}{{ controller_oauthtoken_url }}"
+        user: "{{ controller_username }}"
+        password: "{{ controller_password }}"
+        method: DELETE
+        force_basic_auth: true
+        status_code: 204
+      when: controller_oauthtoken_url is defined
+      ignore_errors: true
+
+    - name: Limpar diretório final
+      tags: always
+      ansible.builtin.file:
+        path: "{{ repo_dir }}"
+        state: absent
+...
