@@ -1,0 +1,307 @@
+---
+controller_workflows:
+  - name: Automation - AAP Apply Migration (Import)
+    description: "{{ description }}"
+    organization: "{{ orgs }}"
+    
+    # 🚨 MÁGICA DA ORG: Define a variável padrão e permite que o usuário troque na hora de rodar
+    extra_vars:
+      target_org: 'ALL'
+    ask_variables_on_launch: true
+    
+    inventory: 'Default Blank Localhost Only'
+    limit: ''
+    scm_branch: ''
+    webhook_service: ''
+    webhook_credential: ''
+    survey_enabled: false
+    allow_simultaneous: false
+    ask_limit_on_launch: false
+    ask_inventory_on_launch: false
+    ask_tags_on_launch: false
+    ask_credential_on_launch: false
+    schedules: []
+    workflow_nodes:
+
+      - identifier: aap-migration-sync
+        unified_job_template:
+          organization:
+            name: "{{ orgs }}"
+          name: aap-migration
+          type: project
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Organizations
+
+      - identifier: AAP Migration - Apply Organizations
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Teams
+        unified_job_template:
+          name: AAP Migration - Apply Organizations
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Teams
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Users
+        unified_job_template:
+          name: AAP Migration - Apply Teams
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Users
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Execution Environments
+        unified_job_template:
+          name: AAP Migration - Apply Users
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Execution Environments
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Credential Types
+        unified_job_template:
+          name: AAP Migration - Apply Execution Environments
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Credential Types
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Credentials
+        unified_job_template:
+          name: AAP Migration - Apply Credential Types
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Credentials
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Projects
+        unified_job_template:
+          name: AAP Migration - Apply Credentials
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Projects
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Inventories
+        unified_job_template:
+          name: AAP Migration - Apply Projects
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Inventories
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Inventory Sources
+        unified_job_template:
+          name: AAP Migration - Apply Inventories
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Inventory Sources
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Instance Groups
+        unified_job_template:
+          name: AAP Migration - Apply Inventory Sources
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Instance Groups
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Hosts
+        unified_job_template:
+          name: AAP Migration - Apply Instance Groups
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Hosts
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Groups
+        unified_job_template:
+          name: AAP Migration - Apply Hosts
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Groups
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Applications
+        unified_job_template:
+          name: AAP Migration - Apply Groups
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Applications
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Job Templates
+        unified_job_template:
+          name: AAP Migration - Apply Applications
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Job Templates
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Workflow Job Templates
+        unified_job_template:
+          name: AAP Migration - Apply Job Templates
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Workflow Job Templates
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Schedules
+        unified_job_template:
+          name: AAP Migration - Apply Workflow Job Templates
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Schedules
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Roles
+        unified_job_template:
+          name: AAP Migration - Apply Schedules
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Roles
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes:
+            - identifier: AAP Migration - Apply Labels
+        unified_job_template:
+          name: AAP Migration - Apply Roles
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+
+      - identifier: AAP Migration - Apply Labels
+        all_parents_must_converge: false
+        related:
+          failure_nodes: []
+          always_nodes: []
+          credentials: []
+          success_nodes: []
+        unified_job_template:
+          name: AAP Migration - Apply Labels
+          organization:
+            name: "{{ orgs }}"
+          type: job_template
+          description: "{{ description }}" 
+...
