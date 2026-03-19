@@ -1,0 +1,161 @@
+---
+- name: GitOps - Export Local Users (Ignorando LDAP)
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    controller_hostname: "{{ lookup('env', 'CONTROLLER_HOST') }}"
+    controller_username: "{{ lookup('env', 'CONTROLLER_USERNAME')|default(omit) }}"
+    controller_password: "{{ lookup('env', 'CONTROLLER_PASSWORD')|default(omit) }}"
+    controller_oauthtoken: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN')|default(null) }}"
+    controller_validate_certs: false
+
+    github_token: "{{ github_token }}"
+    github_repo_url: "github.com/laurobmb/aap_migration.git"
+    github_branch: "aap24-platform-baseline"
+    repo_dir: "/tmp/filetree_output"
+
+  module_defaults:
+    ansible.builtin.uri:
+      validate_certs: "{{ controller_validate_certs }}"
+
+  pre_tasks:
+    - name: Limpar diretório temporário
+      tags: always
+      ansible.builtin.file:
+        path: "{{ repo_dir }}"
+        state: absent
+
+    - name: Clonar o repositório e preparar a branch
+      tags: always
+      ansible.builtin.shell: |
+        git clone https://{{ github_token }}@{{ github_repo_url }} {{ repo_dir }}
+        cd {{ repo_dir }}
+        git checkout {{ github_branch }} 2>/dev/null || git checkout -b {{ github_branch }}
+      no_log: true
+
+    - name: Setup authentication
+      tags: always
+      no_log: true
+      when: controller_oauthtoken is not defined or controller_oauthtoken == ''
+      block:
+        - name: Get the authentication
+          ansible.builtin.uri:
+            url: "https://{{ controller_hostname }}/api/v2/tokens/"
+            user: "{{ controller_username }}"
+            password: "{{ controller_password }}"
+            method: POST
+            force_basic_auth: true
+            status_code: 201
+          register: authtoken_res
+
+        - name: Set the token
+          ansible.builtin.set_fact:
+            controller_oauthtoken: "{{ authtoken_res.json.token }}"
+            controller_oauthtoken_url: "{{ authtoken_res.json.url }}"
+
+  tasks:
+    # 1. Bate na API e traz TODOS os usuários
+    - name: Consultar API do AAP para TODOS os Usuários (Paginação automática)
+      ansible.builtin.set_fact:
+        all_users_raw: >-
+          {{
+            query(
+              'ansible.controller.controller_api',
+              'api/v2/users/',
+              host=controller_hostname,
+              oauth_token=controller_oauthtoken,
+              verify_ssl=controller_validate_certs,
+              return_all=true,
+              max_objects=5000
+            )
+          }}
+      no_log: true
+
+    # 2. Filtra na memória do Ansible e formata para o padrão CaC
+    - name: Construir estrutura de dados apenas com Usuários Locais
+      ansible.builtin.set_fact:
+        local_users_formatted: "{{ local_users_formatted | default([]) + [user_dict] }}"
+      vars:
+        user_dict:
+          username: "{{ item.username }}"
+          first_name: "{{ item.first_name | default('', true) }}"
+          last_name: "{{ item.last_name | default('', true) }}"
+          email: "{{ item.email | default('', true) }}"
+          is_superuser: "{{ item.is_superuser }}"
+          is_system_auditor: "{{ item.is_system_auditor }}"
+          password: "Mudar@123456" 
+      loop: "{{ all_users_raw | selectattr('ldap_dn', 'equalto', '') | list }}"
+      # 🚨 IGNORANDO O SYSTEM E O ADMIN PRINCIPAL
+      when: item.username not in ['system', 'admin']
+      no_log: true
+
+    # 3. Prepara a estrutura de pastas
+    - name: Garantir que a subpasta ORGANIZATIONLESS/users exista
+      ansible.builtin.file:
+        path: "{{ repo_dir }}/ORGANIZATIONLESS/users"
+        state: directory
+        mode: '0755'
+
+    # 4. Grava os usuários em arquivos separados (1 arquivo = 1 usuário)
+    - name: Gravar os usuários locais em arquivos YAML separados
+      ansible.builtin.copy:
+        content: "{{ {'controller_user_accounts': [item]} | to_nice_yaml(indent=2) }}"
+        dest: "{{ repo_dir }}/ORGANIZATIONLESS/users/{{ item.username }}.yaml"
+        mode: '0644'
+      loop: "{{ local_users_formatted }}"
+
+  post_tasks:
+    - name: Delete Auth Token
+      tags: always
+      ansible.builtin.uri:
+        url: "https://{{ controller_hostname }}{{ controller_oauthtoken_url }}"
+        user: "{{ controller_username }}"
+        password: "{{ controller_password }}"
+        method: DELETE
+        force_basic_auth: true
+        status_code: 204
+      when: controller_oauthtoken_url is defined
+      ignore_errors: true
+
+    - name: Configurar identidade do Git, fazer Commit e Push (Com Retry)
+      tags: always
+      ansible.builtin.shell: |
+        set -e
+        cd {{ repo_dir }}
+
+        git config user.name "AAP Automation (CaC)"
+        git config user.email "cac-automation@rhbr-lab.com"
+        git add .
+
+        if ! git diff-index --quiet HEAD; then
+          git commit -m "Backup: Local Users Only (Job ID: {{ tower_job_id | default('N/A') }}) - $(date +'%Y-%m-%d %H:%M:%S')"
+          
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          SUCCESS=false
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            git pull --rebase origin {{ github_branch }} || true
+            if git push origin {{ github_branch }}; then
+              SUCCESS=true
+              break
+            else
+              echo "Conflito detectado com outro Job. Tentando novamente..."
+              RETRY_COUNT=$((RETRY_COUNT+1))
+              sleep $(( (RANDOM % 5) + 1 ))
+            fi
+          done
+          
+          if [ "$SUCCESS" = true ]; then
+            echo "STATUS: SUCESSO_PUSH"
+          else
+            echo "STATUS: FALHA_PUSH_APOS_RETRIES"
+            exit 1
+          fi
+        else
+          echo "STATUS: SEM_MUDANCAS"
+        fi
+      register: git_result
+      changed_when: "'SUCESSO_PUSH' in git_result.stdout"
+...
