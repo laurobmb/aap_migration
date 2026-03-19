@@ -1,0 +1,11 @@
+---
+controller_user_accounts:
+- username: "lagomes"
+  password: "INITIAL"
+  email: "lagomes@redhat.com"
+  first_name: "Lauro"
+  last_name: "Gomes"
+  auditor: "True"
+  superuser: "False"
+  update_secrets: false
+...

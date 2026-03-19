@@ -1,0 +1,14 @@
+---
+controller_roles:
+  - user: "lagomes"
+    job_template: "Demo Job Template"
+    role: "execute"
+  - user: "lagomes"
+    organizations:
+      - "devops"
+    role: "auditor"
+  - user: "lagomes"
+    organizations:
+      - "devops"
+    role: "member"
+...
